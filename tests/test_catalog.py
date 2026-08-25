@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from comfycolab.catalog import load_models, load_nodes, load_presets
+from comfycolab.catalog import load_models, load_nodes
 from comfycolab.nodes import repo_dir_name
 
 
@@ -52,17 +52,3 @@ class TestModels:
             assert spec["url"].startswith("https://"), name
             assert spec["dir"], name
 
-
-class TestPresets:
-    def test_preset_tro_toi_bo_node_co_that(self):
-        node_sets = load_nodes()
-        for name, spec in load_presets().items():
-            assert spec["nodes"] in node_sets, f"preset {name} trỏ tới bộ node lạ"
-
-    def test_model_trong_preset_co_that(self):
-        catalog = load_models()
-        for name, spec in load_presets().items():
-            for m in spec.get("models") or []:
-                if m.startswith("http"):
-                    continue
-                assert m in catalog, f"preset {name} dùng model lạ: {m}"

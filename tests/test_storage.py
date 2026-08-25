@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from comfycolab.catalog import load_models, load_presets
+from comfycolab.catalog import load_models
 from comfycolab.config import Config, Paths
 from comfycolab.runtime import estimate_size_gb
-
-# Drive miễn phí của Google. Preset vượt ngưỡng này phải nói rõ trong note.
-DRIVE_FREE_GB = 15.0
 
 
 class TestModelStorage:
@@ -25,11 +22,29 @@ class TestModelStorage:
         """Ảnh xuất phải sống qua phiên kể cả khi model thì không."""
         p = Paths().with_model_storage(False)
         assert p.output.as_posix().startswith("/content/drive/")
+        assert p.user.as_posix().startswith("/content/drive/")
 
     @pytest.mark.parametrize("choice,on_drive", [("drive", True), ("session", False)])
     def test_from_notebook_doc_dung_lua_chon(self, choice, on_drive):
-        cfg = Config.from_notebook(preset="fast", model_storage=choice)
+        cfg = Config.from_notebook(node_set="fast", model_storage=choice)
         assert cfg.paths.models_on_drive is on_drive
+
+
+class TestDefaultLaNhe:
+    """Đường mặc định phải dựng được ComfyUI mà KHÔNG tải model nào.
+
+    Thứ cần biết trước tiên là ComfyUI có chạy không, chứ không phải chờ
+    vài GB rồi mới biết.
+    """
+
+    def test_khong_truyen_gi_thi_khong_co_model(self):
+        assert Config.from_notebook().models == ()
+
+    def test_khong_truyen_gi_thi_bo_node_toi_thieu(self):
+        assert Config.from_notebook().node_set == "fast"
+
+    def test_o_models_rong_van_hop_le(self):
+        assert Config.from_notebook(node_set="base", models="   ").models == ()
 
 
 class TestSizeEstimate:
@@ -37,26 +52,14 @@ class TestSizeEstimate:
         for name, spec in load_models().items():
             assert spec["size_gb"], f"{name} thiếu size_gb — check_space sẽ tính hụt"
 
-    def test_preset_rong_la_khong(self):
+    def test_rong_la_khong(self):
         assert estimate_size_gb([]) == 0
 
     def test_url_la_khong_tinh_duoc(self):
         assert estimate_size_gb(["https://example.com/x.safetensors"]) == 0
 
-    def test_tong_preset_khop_model(self):
+    def test_cong_dung_tu_catalog(self):
         catalog = load_models()
-        for name, spec in load_presets().items():
-            names = spec.get("models") or []
-            expected = sum(catalog[m]["size_gb"] for m in names if m in catalog)
-            assert estimate_size_gb(names) == pytest.approx(expected)
-
-    def test_preset_vuot_drive_free_phai_canh_bao_trong_note(self):
-        """Ai thêm preset nặng mà quên ghi chú thì test này chặn lại."""
-        for name, spec in load_presets().items():
-            size = estimate_size_gb(spec.get("models") or [])
-            if size > DRIVE_FREE_GB:
-                note = (spec.get("note") or "").lower()
-                assert "session" in note, (
-                    f"preset {name!r} cần ~{size:.1f} GB (> {DRIVE_FREE_GB} GB Drive "
-                    "free) nhưng note không nhắc chọn Model storage = session"
-                )
+        names = ["sdxl-base", "sdxl-vae"]
+        expected = sum(catalog[n]["size_gb"] for n in names)
+        assert estimate_size_gb(names) == pytest.approx(expected)

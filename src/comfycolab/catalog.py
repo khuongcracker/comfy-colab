@@ -1,9 +1,9 @@
 """Đọc catalog — lớp dữ liệu tách hẳn khỏi code.
 
-Thêm node, thêm model, thêm preset chỉ cần sửa file YAML trong `data/`,
+Thêm node hoặc model chỉ cần sửa file YAML trong `data/`,
 không đụng một dòng Python nào. Đây là ý tưởng đúng nhất của bản gốc (họ để
 node ở .txt, model ở .json) và được giữ nguyên tinh thần, chỉ gom về một
-định dạng có schema thay vì ba định dạng rời.
+định dạng có schema thay vì nhiều định dạng rời.
 """
 
 from __future__ import annotations
@@ -115,20 +115,7 @@ def load_models() -> dict[str, dict[str, Any]]:
     return out
 
 
-@functools.lru_cache(maxsize=None)
-def load_presets() -> dict[str, dict[str, Any]]:
-    """Preset = một combo node-set + model + phiên bản ghim."""
-    raw = _load_yaml("presets.yaml")
-    for name, spec in raw.items():
-        if not isinstance(spec, dict):
-            raise CatalogError(f"Preset {name!r} phải là mapping.")
-        if "nodes" not in spec:
-            raise CatalogError(f"Preset {name!r} thiếu khoá 'nodes'.")
-    return raw
-
-
 def clear_cache() -> None:
     """Quên catalog đã đọc — dùng khi sửa YAML giữa phiên."""
     load_nodes.cache_clear()
     load_models.cache_clear()
-    load_presets.cache_clear()

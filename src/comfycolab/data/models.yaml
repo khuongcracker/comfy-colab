@@ -1,24 +1,22 @@
-# Model đặt tên sẵn, để khỏi phải dán URL dài trong notebook.
+# Lối tắt đặt tên cho vài model hay dùng — HOÀN TOÀN TUỲ CHỌN.
 #
-# Cách dùng:
+# Ô `Models` trong notebook nhận URL trực tiếp, nên file này chỉ để khỏi phải
+# dán URL dài. Không có model nào trong đây thì tool vẫn chạy bình thường:
+# mở ComfyUI lên rồi tải model bằng ComfyUI-Manager trong giao diện.
+#
+# Danh sách dưới là VÍ DỤ. Cứ xoá hết và thay bằng model của bro.
+#
+# Cách viết:
 #   tên-gọi:
 #     url: https://...              # HuggingFace / CivitAI / link trực tiếp
 #     dir: checkpoints              # thư mục con trong models/ của ComfyUI
 #     filename: ten-file.safetensors  # tuỳ chọn, mặc định lấy từ URL
+#     size_gb: 6.9                  # để check_space cảnh báo trước khi tải
 #     note: mô tả ngắn
-#
-# Viết tắt: `tên-gọi: https://...` nếu để dir mặc định là checkpoints.
-#
-# Trong notebook, ô Models nhận cả tên ở đây LẪN URL trực tiếp — nên danh
-# sách này chỉ là tiện lợi, không phải giới hạn.
 #
 # ⚠️ CHỈ DÙNG NGUỒN KHÔNG GATED. Repo HuggingFace gated (phải bấm đồng ý
 # license) trả 401 nếu không có token, và người dùng sẽ không hiểu vì sao
-# hỏng. Ví dụ: black-forest-labs/FLUX.1-schnell là gated — dùng bản
-# Comfy-Org đóng gói lại thay thế.
-#
-# Kiểm nhanh trước khi thêm:
-#   curl -sIL -o /dev/null -w '%{http_code}\n' '<url>'
+# hỏng. Kiểm bằng `pytest -m network` sau mỗi lần sửa file này.
 
 sd15:
   url: https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors

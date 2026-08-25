@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from . import layout, nodes, shell, tunnels
-from .catalog import load_models, load_presets
+from .catalog import load_models, load_nodes
 from .config import Config
 from .download import download_all
 
@@ -172,7 +172,7 @@ def prepare(cfg: Config) -> None:
         )
     else:
         _step("Tải model")
-        print("  Không có model nào trong preset — tải sau bằng ComfyUI-Manager.")
+        print("  Không có model nào — tải sau bằng ComfyUI-Manager trong giao diện.")
 
     _step("Trỏ ComfyUI về Drive")
     target = layout.write_extra_model_paths(cfg.paths)
@@ -186,8 +186,8 @@ def launch(cfg: Config | None = None, **kwargs: object) -> None:
     """Cài (nếu cần) rồi chạy ComfyUI, giữ cell sống.
 
     Gọi được hai kiểu:
-        launch(Config.from_notebook(preset="flux"))
-        launch(preset="flux", tunnel="cloudflare")
+        launch(Config.from_notebook(node_set="base"))
+        launch(node_set="base", tunnel="cloudflare")
     """
     if cfg is None:
         cfg = Config.from_notebook(**kwargs)  # type: ignore[arg-type]
@@ -216,10 +216,8 @@ def launch(cfg: Config | None = None, **kwargs: object) -> None:
     shell.run(argv, cwd=cfg.paths.comfy, check=False)
 
 
-def list_presets() -> None:
-    """In các preset đang có — tiện gọi trong notebook."""
-    for name, spec in sorted(load_presets().items()):
-        models = spec.get("models") or []
-        size = estimate_size_gb(models)
-        note = spec.get("note", "")
-        print(f"  {name:<6} nodes={spec['nodes']:<5} ~{size:5.1f} GB  {note}")
+def list_node_sets() -> None:
+    """In các bộ node đang có — tiện gọi trong notebook."""
+    for name, entries in sorted(load_nodes().items()):
+        names = ", ".join(e["repo"].rsplit("/", 1)[-1] for e in entries) or "(trống)"
+        print(f"  {name:<6} {len(entries):>2} node  {names}")

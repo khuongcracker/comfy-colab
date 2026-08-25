@@ -128,7 +128,7 @@ class Config:
     def from_notebook(
         cls,
         *,
-        preset: str = "fast",
+        node_set: str = "fast",
         data_dir: str = "/content/drive/MyDrive/ComfyData",
         model_storage: str = "drive",
         models: str = "",
@@ -142,33 +142,35 @@ class Config:
     ) -> "Config":
         """Dựng Config từ các ô @param của notebook.
 
-        Nhận chuỗi thô kiểu Colab (có thể kèm emoji), tự chuẩn hoá. Ô `models`
-        nhận nhiều dòng hoặc ngăn bằng dấu phẩy.
+        Nhận chuỗi thô kiểu Colab (có thể kèm emoji), tự chuẩn hoá.
+
+        Model KHÔNG bó vào bộ node. Ô `models` để trống là chỉ dựng ComfyUI —
+        đó là đường mặc định, vì thứ cần trước tiên là biết ComfyUI có chạy
+        hay không, chứ không phải chờ tải vài GB.
         """
-        from .catalog import load_presets
+        from .catalog import load_nodes
 
-        preset_name = clean_label(preset)
-        presets = load_presets()
-        if preset_name not in presets:
-            known = ", ".join(sorted(presets))
-            raise KeyError(f"preset không có: {preset_name!r}. Đang có: {known}")
+        chosen = clean_label(node_set)
+        available = load_nodes()
+        if chosen not in available:
+            known = ", ".join(sorted(available))
+            raise KeyError(f"Không có bộ node {chosen!r}. Đang có: {known}")
 
-        spec = presets[preset_name]
         cfg = cls(
             paths=Paths()
             .with_data(data_dir.strip() or Paths().data)
             .with_model_storage(clean_label(model_storage).lower() != "session"),
-            node_set=spec.get("nodes", "fast"),
-            models=tuple(spec.get("models", ())) + parse_model_list(models),
+            node_set=chosen,
+            models=parse_model_list(models),
             tunnel=clean_label(tunnel).lower(),
             tunnel_region=clean_label(tunnel_region).lower(),
             extra_args=extra_args.strip(),
             mount_drive=mount_drive,
             civitai_token=civitai_token.strip() or None,
             hf_token=hf_token.strip() or None,
-            comfy_commit=spec.get("comfy_commit"),
-            frontend_version=spec.get("frontend_version"),
         )
+        # comfy_commit / frontend_version truyền qua overrides khi cần ghim
+        # một bản cụ thể lúc upstream có regression.
         return replace(cfg, **overrides) if overrides else cfg
 
 

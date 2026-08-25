@@ -13,8 +13,8 @@ Chạy ComfyUI trên Google Colab. Notebook mỏng + package Python test đượ
 
 ```bash
 pip install -e ".[dev]"
-pytest                 # 62 test logic, ~0.1s, không cần mạng/GPU/Colab
-pytest -m network      # 23 test kiểm URL catalog còn sống (~20s)
+pytest                 # 65 test logic, ~0.1s, không cần mạng/GPU/Colab
+pytest -m network      # kiểm URL trong catalog còn sống (~20s)
 pytest -k resolver     # chạy nhóm
 ```
 
@@ -47,6 +47,8 @@ Drive free chỉ **15 GB**, đĩa tạm Colab khoảng **80 GB**. `Paths.models_
 ## Ngoài phạm vi (cố ý)
 
 - Chỉ đỡ **ComfyUI**. Không đỡ Forge / Automatic1111 / Kohya / Fooocus / FluxGym.
+- **Không cong vênh model.** Đây là tool hạ tầng. Model là việc của người dùng và sẽ thay đổi — đừng thêm lại lớp preset bó node với model (xem ADR-008). `models.yaml` chỉ là lối tắt tuỳ chọn, xoá sạch vẫn phải chạy.
+- **Đường mặc định phải nhẹ.** Bấm chạy là chỉ dựng ComfyUI, không tải model nào. Có test chặn (`test_storage.py::TestDefaultLaNhe`).
 - Chỉ chạy **Colab**. Có giả định `/content` và Google Drive. Muốn đỡ RunPod/local thì phải bóc giả định đó ra khỏi `Paths` trước.
 - Không vá frontend JS. Bản gốc string-replace vào bundle đã minify để đổi default workflow — bỏ hẳn, quá giòn.
 

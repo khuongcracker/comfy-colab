@@ -19,7 +19,7 @@ Ghi lại **vì sao**, để sau này không ai (kể cả mình) vô tình quay
 
 **Đánh đổi.** Mất đường kéo update từ upstream. Chấp nhận được vì mục tiêu là toàn quyền kiểm soát.
 
-**Ghi công** đặt trong README: hai ý tưởng tốt của họ được giữ lại (tách dữ liệu ra file, đặt tên preset theo thời gian chờ).
+**Ghi công** đặt trong README: ý tưởng tốt nhất của họ được giữ lại — tách danh sách node/model ra file dữ liệu để thêm bớt không cần sửa code.
 
 ---
 
@@ -87,3 +87,22 @@ Muốn có workflow mặc định thì để file `.json` vào `user/default/wor
 **Quyết định.** Đổi thư mục thành `data/`.
 
 **Vì sao.** Tên trùng buộc Python phải phân giải giữa module và namespace package. Nó *có* chạy, nhưng là bẫy: đổi thứ tự sys.path hoặc thêm `__init__.py` là hành vi đổi. Không đáng để lại.
+
+---
+
+## ADR-008 — Bỏ lớp preset, tách bộ node khỏi model
+
+**Ngày:** 25/08/2026
+
+**Bối cảnh.** Bản đầu có `presets.yaml` bó cứng "bộ node + danh sách model" vào một tên (`sd15`, `sdxl`, `flux`...). Chủ dự án nói lại rõ phạm vi: cái cần là **cơ sở để chạy ComfyUI trên Colab**, còn model thì sẽ thay đổi tuỳ lúc.
+
+**Quyết định.** Xoá `presets.yaml`. Notebook có hai ô riêng: `NodeSet` (fast/base/full/none) và `Models` (để trống, hoặc dán URL bất kỳ).
+
+**Vì sao.**
+- Preset là **sai trừu tượng** cho nhu cầu này. Nó gắn một lựa chọn hạ tầng (bộ node) với một lựa chọn nội dung (model cụ thể) — hai thứ đổi theo nhịp hoàn toàn khác nhau.
+- Nó làm hỏng đường mặc định: bấm chạy là phải chờ tải 4.4 GB mới biết ComfyUI có lên hay không. Thứ cần biết trước tiên là **hạ tầng có chạy không**.
+- Bộ `fast` đã có ComfyUI-Manager, nên tải model trong giao diện là đường tự nhiên nhất — không cần tool này quyết hộ.
+
+**Còn giữ.** Toàn bộ máy tải model (resolver, verify, idempotent, cảnh báo dung lượng) vẫn nguyên vì nó là phần tái dùng được. `models.yaml` hạ xuống thành **lối tắt đặt tên tuỳ chọn**, xoá sạch vẫn chạy.
+
+**Bài học.** Đây là lỗi của người viết chứ không phải của yêu cầu: đã tự suy ra "cần preset model" từ chỗ bản gốc có preset, thay vì hỏi phạm vi thật trước.
