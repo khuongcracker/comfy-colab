@@ -37,6 +37,13 @@ class Paths:
     root: Path = Path("/content")
     data: Path = Path("/content/drive/MyDrive/ComfyData")
 
+    # Model nằm trên Drive (giữ qua phiên) hay trên đĩa tạm của Colab?
+    #
+    # Drive free chỉ 15 GB — không chứa nổi checkpoint Flux (~17 GB). Đĩa tạm
+    # của Colab khoảng 80 GB nhưng mất sạch khi ngắt phiên. Nên đây phải là
+    # lựa chọn của người dùng, không phải giả định cứng.
+    models_on_drive: bool = True
+
     @property
     def comfy(self) -> Path:
         return self.root / "ComfyUI"
@@ -47,8 +54,8 @@ class Paths:
 
     @property
     def models(self) -> Path:
-        """Thư mục model trên Drive — sống qua các phiên Colab."""
-        return self.data / "models"
+        """Thư mục model. Trên Drive thì sống qua phiên, trên đĩa tạm thì không."""
+        return (self.data / "models") if self.models_on_drive else (self.root / "models")
 
     @property
     def output(self) -> Path:
@@ -69,6 +76,9 @@ class Paths:
 
     def with_data(self, data: str | Path) -> "Paths":
         return replace(self, data=Path(data))
+
+    def with_model_storage(self, on_drive: bool) -> "Paths":
+        return replace(self, models_on_drive=on_drive)
 
 
 @dataclass(frozen=True)
@@ -120,6 +130,7 @@ class Config:
         *,
         preset: str = "fast",
         data_dir: str = "/content/drive/MyDrive/ComfyData",
+        model_storage: str = "drive",
         models: str = "",
         tunnel: str = "cloudflare",
         tunnel_region: str = "auto",
@@ -144,7 +155,9 @@ class Config:
 
         spec = presets[preset_name]
         cfg = cls(
-            paths=Paths().with_data(data_dir.strip() or Paths().data),
+            paths=Paths()
+            .with_data(data_dir.strip() or Paths().data)
+            .with_model_storage(clean_label(model_storage).lower() != "session"),
             node_set=spec.get("nodes", "fast"),
             models=tuple(spec.get("models", ())) + parse_model_list(models),
             tunnel=clean_label(tunnel).lower(),

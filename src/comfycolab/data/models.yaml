@@ -12,48 +12,71 @@
 # Trong notebook, ô Models nhận cả tên ở đây LẪN URL trực tiếp — nên danh
 # sách này chỉ là tiện lợi, không phải giới hạn.
 #
-# CHỦ Ý ĐỂ NGẮN: đây là catalog của bro, tự thêm model bro hay dùng.
-# Không bê danh sách của repo khác vào, vừa thừa vừa vướng bản quyền.
+# ⚠️ CHỈ DÙNG NGUỒN KHÔNG GATED. Repo HuggingFace gated (phải bấm đồng ý
+# license) trả 401 nếu không có token, và người dùng sẽ không hiểu vì sao
+# hỏng. Ví dụ: black-forest-labs/FLUX.1-schnell là gated — dùng bản
+# Comfy-Org đóng gói lại thay thế.
+#
+# Kiểm nhanh trước khi thêm:
+#   curl -sIL -o /dev/null -w '%{http_code}\n' '<url>'
 
 sd15:
   url: https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
   dir: checkpoints
   filename: sd15.safetensors
-  note: SD 1.5 gốc, nhẹ, hợp để test đường ống
+  size_gb: 4.3
+  note: SD 1.5 gốc — 4.3 GB, nhẹ nhất, hợp để test đường ống
 
 sdxl-base:
   url: https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
   dir: checkpoints
   filename: sdxl-base.safetensors
-  note: SDXL base 1.0
+  size_gb: 6.9
+  note: SDXL base 1.0 — 6.9 GB
 
 sdxl-vae:
   url: https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors
   dir: vae
   filename: sdxl-vae.safetensors
+  size_gb: 0.33
+  note: 0.3 GB
 
-flux-schnell:
-  url: https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors
-  dir: diffusion_models
-  filename: flux1-schnell.safetensors
-  note: Flux schnell — 4 step, nhanh
+flux-schnell-fp8:
+  url: https://huggingface.co/Comfy-Org/flux1-schnell/resolve/main/flux1-schnell-fp8.safetensors
+  dir: checkpoints
+  filename: flux1-schnell-fp8.safetensors
+  size_gb: 17.3
+  note: >-
+    Flux schnell all-in-one fp8 — 17 GB, đã gồm sẵn VAE + text encoder nên
+    load bằng CheckpointLoaderSimple như model thường. KHÔNG vừa Drive free
+    (15 GB): chọn Model storage = session.
 
-flux-vae:
-  url: https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors
-  dir: vae
-  filename: flux-ae.safetensors
+flux-dev-fp8:
+  url: https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors
+  dir: checkpoints
+  filename: flux1-dev-fp8.safetensors
+  size_gb: 17.3
+  note: >-
+    Flux dev all-in-one fp8 — 17 GB. Chất lượng cao hơn schnell nhưng cần
+    nhiều step hơn. Cũng cần Model storage = session.
 
 clip-l:
   url: https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors
   dir: text_encoders
   filename: clip_l.safetensors
+  size_gb: 0.25
+  note: 0.25 GB — chỉ cần khi dùng Flux dạng tách file
 
 t5xxl-fp8:
   url: https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors
   dir: text_encoders
   filename: t5xxl_fp8.safetensors
+  size_gb: 4.9
+  note: 4.9 GB — chỉ cần khi dùng Flux dạng tách file
 
 upscale-4x-ultrasharp:
   url: https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x-UltraSharp.pth
   dir: upscale_models
   filename: 4x-UltraSharp.pth
+  size_gb: 0.07
+  note: 0.07 GB

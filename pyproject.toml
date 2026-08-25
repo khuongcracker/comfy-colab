@@ -22,7 +22,10 @@ comfycolab = ["data/*.yaml"]
 
 [tool.pytest.ini_options]
 # src/ nằm trong testpaths để doctest trong docstring cũng được chạy.
-# runtime.py bị loại vì nó chỉ toàn side effect (mount Drive, clone, chạy server).
+# runtime.py bị loại khỏi doctest vì nó toàn side effect (mount Drive, clone, chạy server).
 testpaths = ["tests", "src"]
-addopts = "-q --doctest-modules --ignore=src/comfycolab/runtime.py"
+addopts = "-q --doctest-modules --ignore=src/comfycolab/runtime.py -m 'not network'"
 pythonpath = ["src"]
+markers = [
+  "network: gọi mạng thật để kiểm URL trong catalog. Chạy bằng: pytest -m network",
+]

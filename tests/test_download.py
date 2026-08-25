@@ -17,7 +17,9 @@ class TestParseSpec:
         assert spec.source == "catalog:sdxl-base"
 
     def test_ten_catalog_co_dir_rieng(self):
-        assert parse_spec("flux-vae").dest_dir == "vae"
+        assert parse_spec("sdxl-vae").dest_dir == "vae"
+        assert parse_spec("t5xxl-fp8").dest_dir == "text_encoders"
+        assert parse_spec("upscale-4x-ultrasharp").dest_dir == "upscale_models"
 
     def test_url_truc_tiep(self):
         spec = parse_spec("https://example.com/m.safetensors")

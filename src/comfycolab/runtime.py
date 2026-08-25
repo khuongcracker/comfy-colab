@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from . import layout, nodes, shell, tunnels
-from .catalog import load_presets
+from .catalog import load_models, load_presets
 from .config import Config
 from .download import download_all
 
@@ -21,6 +21,49 @@ COMFY_REPO = "https://github.com/comfyanonymous/ComfyUI"
 
 def _step(title: str) -> None:
     print(f"\n\033[1;36m▸ {title}\033[0m")
+
+
+def estimate_size_gb(models: tuple[str, ...] | list[str]) -> float:
+    """Ước lượng tổng dung lượng model, theo `size_gb` khai trong models.yaml.
+
+    URL trực tiếp không biết trước dung lượng nên tính là 0 — đây là ước lượng
+    để cảnh báo sớm, không phải con số chính xác.
+    """
+    catalog = load_models()
+    return sum(catalog[m]["size_gb"] or 0 for m in models if m in catalog)
+
+
+def check_space(cfg: Config) -> None:
+    """Cảnh báo TRƯỚC khi tải, thay vì để aria2c chết vì hết chỗ sau 10 phút.
+
+    Hạn chế đã biết: Drive mount qua FUSE nên `disk_usage` có thể trả dung
+    lượng của đĩa nền chứ không phải hạn mức Drive thật. Khi đó cảnh báo sẽ
+    không nổ dù Drive đã đầy — coi đây là lưới an toàn, không phải bảo đảm.
+    """
+    import shutil
+
+    need = estimate_size_gb(cfg.models)
+    if need <= 0:
+        return
+
+    target = cfg.paths.models
+    target.mkdir(parents=True, exist_ok=True)
+    free = shutil.disk_usage(target).free / 1e9
+
+    where = "Drive" if cfg.paths.models_on_drive else "đĩa tạm của phiên"
+    print(f"  Cần ~{need:.1f} GB, còn trống {free:.1f} GB trên {where}.")
+
+    if need > free * 0.95:
+        hint = ""
+        if cfg.paths.models_on_drive:
+            hint = (
+                "\n  → Đổi Model storage sang 'session' trong notebook: đĩa tạm "
+                "Colab rộng hơn nhiều, đổi lại model mất khi ngắt phiên."
+            )
+        print(
+            "\n\033[1;33m⚠ Nhiều khả năng KHÔNG ĐỦ CHỖ.\033[0m "
+            f"Cần ~{need:.1f} GB mà chỉ còn {free:.1f} GB.{hint}\n"
+        )
 
 
 # ---------------------------------------------------------------- chuẩn bị
@@ -107,7 +150,9 @@ def prepare(cfg: Config) -> None:
 
     _step("Dựng cây thư mục dữ liệu")
     layout.ensure_data_tree(cfg.paths)
-    print(f"  Model: {cfg.paths.models}")
+    keep = "giữ qua phiên" if cfg.paths.models_on_drive else "MẤT khi ngắt phiên"
+    print(f"  Model : {cfg.paths.models.as_posix()}  ({keep})")
+    print(f"  Output: {cfg.paths.output.as_posix()}")
 
     _step("Cài ComfyUI")
     install_comfy(cfg)
@@ -118,6 +163,7 @@ def prepare(cfg: Config) -> None:
 
     if cfg.models:
         _step(f"Tải model ({len(cfg.models)} mục)")
+        check_space(cfg)
         download_all(
             list(cfg.models),
             cfg.paths.models,
@@ -174,5 +220,6 @@ def list_presets() -> None:
     """In các preset đang có — tiện gọi trong notebook."""
     for name, spec in sorted(load_presets().items()):
         models = spec.get("models") or []
+        size = estimate_size_gb(models)
         note = spec.get("note", "")
-        print(f"  {name:<8} nodes={spec['nodes']:<6} models={len(models):<2} {note}")
+        print(f"  {name:<6} nodes={spec['nodes']:<5} ~{size:5.1f} GB  {note}")

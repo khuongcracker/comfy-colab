@@ -109,6 +109,7 @@ def load_models() -> dict[str, dict[str, Any]]:
             "url": spec["url"],
             "dir": spec.get("dir", "checkpoints"),
             "filename": spec.get("filename"),
+            "size_gb": spec.get("size_gb"),
             "note": spec.get("note"),
         }
     return out
