@@ -17,7 +17,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Mapping, Sequence
 
 
 class CommandError(RuntimeError):
@@ -111,16 +111,21 @@ def which(name: str) -> str | None:
     return _which(name)
 
 
-def apt_install(packages: Iterable[str], *, quiet: bool = True) -> None:
-    """Cài gói hệ thống. Bỏ qua gói đã có để chạy lại không tốn thời gian."""
-    missing = [p for p in packages if which(p) is None]
+def apt_install(packages: Mapping[str, str], *, quiet: bool = True) -> None:
+    """Cài gói hệ thống, bỏ qua gói đã có.
+
+    Nhận mapping `{tên gói apt: tên binary}` vì hai thứ đó hay khác nhau —
+    gói `aria2` cài ra lệnh `aria2c`. Dùng tên gói để dò là lần nào cũng
+    tưởng thiếu và cài lại.
+    """
+    missing = [pkg for pkg, binary in packages.items() if which(binary) is None]
     if not missing:
         return
     run(["apt-get", "update", "-qq"], check=False)
     cmd = ["apt-get", "install", "-y"]
     if quiet:
         cmd.append("-qq")
-    run(cmd + list(missing))
+    run(cmd + missing)
 
 
 def pip_install(

@@ -90,7 +90,7 @@ def mount_drive(paths_data: Path) -> bool:
 
 def install_system_deps(*, need_tunnel: str = "cloudflare") -> None:
     """aria2c để tải nhanh, cloudflared nếu dùng tunnel đó."""
-    shell.apt_install(["aria2"])
+    shell.apt_install({"aria2": "aria2c"})
 
     if need_tunnel == "cloudflare" and shell.which("cloudflared") is None:
         deb = "/tmp/cloudflared.deb"

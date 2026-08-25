@@ -17,28 +17,48 @@ from pathlib import Path
 
 from .config import Paths
 
-# Thư mục con trong models/ mà ComfyUI biết. Giữ khớp với tên khoá ComfyUI
-# dùng trong extra_model_paths.yaml.
+# Thư mục con trong models/ mà ComfyUI biết.
+#
+# Lấy từ `folder_names_and_paths` trong folder_paths.py của ComfyUI — chỉ
+# những khoá trỏ vào `models_dir`. KHÔNG đưa `custom_nodes` và `datasets`
+# vào đây: chúng nằm dưới base_path chứ không phải models_dir, khai nhầm là
+# ComfyUI đi tìm custom node trên Drive.
+#
+# Kiểm lại khi ComfyUI cập nhật:
+#   grep -oE 'folder_names_and_paths\["[a-z0-9_]+"\] = \(\[os\.path\.join\(models_dir' \
+#     folder_paths.py | grep -oE '"[a-z0-9_]+"'
 MODEL_DIRS = (
+    "audio_encoders",
+    "background_removal",
     "checkpoints",
-    "clip",
+    "classifiers",
     "clip_vision",
     "configs",
     "controlnet",
+    "detection",
     "diffusers",
     "diffusion_models",
     "embeddings",
+    "frame_interpolation",
+    "geometry_estimation",
     "gligen",
     "hypernetworks",
+    "latent_upscale_models",
     "loras",
+    "model_patches",
+    "optical_flow",
     "photomaker",
     "style_models",
     "text_encoders",
-    "unet",
     "upscale_models",
     "vae",
     "vae_approx",
 )
+
+# Tên cũ. ComfyUI có `map_legacy()` chuyển `unet` -> `diffusion_models` và
+# `clip` -> `text_encoders`, nên khai thêm ở đây giúp thư mục Drive lỡ đặt
+# tên cũ vẫn được quét.
+LEGACY_DIRS = ("clip", "unet")
 
 DATA_DIRS = ("input", "output", "user")
 
@@ -66,7 +86,7 @@ def render_extra_model_paths(paths: Paths) -> str:
         f"    base_path: {paths.models.as_posix()}",
         "    is_default: false",
     ]
-    for name in MODEL_DIRS:
+    for name in MODEL_DIRS + LEGACY_DIRS:
         lines.append(f"    {name}: {name}")
     return "\n".join(lines) + "\n"
 

@@ -6,7 +6,12 @@ import pytest
 
 from comfycolab.config import Paths
 from comfycolab.download import DownloadError, parse_spec
-from comfycolab.layout import MODEL_DIRS, launch_args, render_extra_model_paths
+from comfycolab.layout import (
+    LEGACY_DIRS,
+    MODEL_DIRS,
+    launch_args,
+    render_extra_model_paths,
+)
 
 
 class TestParseSpec:
@@ -47,8 +52,32 @@ class TestParseSpec:
 class TestLayout:
     def test_yaml_chua_moi_thu_muc_model(self):
         text = render_extra_model_paths(Paths())
-        for name in MODEL_DIRS:
+        for name in MODEL_DIRS + LEGACY_DIRS:
             assert f"{name}: {name}" in text
+
+    def test_khong_khai_custom_nodes_va_datasets(self):
+        """Hai thư mục này nằm dưới base_path chứ không phải models_dir.
+
+        Khai nhầm vào extra_model_paths là ComfyUI đi tìm custom node trên
+        Drive — hỏng theo kiểu rất khó đoán.
+        """
+        text = render_extra_model_paths(Paths())
+        assert "custom_nodes" not in text
+        assert "datasets" not in text
+
+    def test_co_du_thu_muc_ComfyUI_hien_dung(self):
+        """Thiếu thư mục nào là model để đó sẽ không hiện trong ComfyUI."""
+        must_have = {
+            "checkpoints", "loras", "vae", "controlnet", "upscale_models",
+            "text_encoders", "diffusion_models", "clip_vision", "embeddings",
+            "style_models", "model_patches", "audio_encoders",
+        }
+        assert must_have <= set(MODEL_DIRS)
+
+    def test_legacy_alias_van_duoc_khai(self):
+        """ComfyUI map_legacy() đổi unet->diffusion_models, clip->text_encoders."""
+        assert set(LEGACY_DIRS) == {"clip", "unet"}
+        assert not set(LEGACY_DIRS) & set(MODEL_DIRS), "legacy không được trùng"
 
     def test_yaml_tro_dung_base_path(self):
         paths = Paths().with_data("/content/drive/MyDrive/Test")
