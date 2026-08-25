@@ -1,0 +1,49 @@
+# Preset = một combo sẵn: bộ node + model kèm + phiên bản ghim.
+#
+# Tên preset nói rõ THỜI GIAN CHỜ, vì đó là thứ người dùng thật sự cân nhắc
+# khi chọn. (Ý này lấy từ cách repo gốc đặt tên preset — một quyết định UX
+# đúng, đáng giữ.)
+#
+# Khoá dùng được:
+#   nodes:            tên bộ trong nodes.yaml            (bắt buộc)
+#   models:           danh sách tên model hoặc URL       (tuỳ chọn)
+#   comfy_commit:     ghim commit ComfyUI                (tuỳ chọn)
+#   frontend_version: ghim comfyui-frontend-package      (tuỳ chọn)
+#
+# Để trống comfy_commit/frontend_version = luôn lấy bản mới nhất.
+# Khi upstream có regression, điền commit đã chạy được vào đây là xong.
+
+fast:
+  nodes: fast
+  models: []
+  note: Chỉ dựng ComfyUI + node tối thiểu. Tự tải model sau bằng Manager.
+
+sd15:
+  nodes: base
+  models:
+    - sd15
+    - upscale-4x-ultrasharp
+
+sdxl:
+  nodes: base
+  models:
+    - sdxl-base
+    - sdxl-vae
+    - upscale-4x-ultrasharp
+
+flux:
+  nodes: base
+  models:
+    - flux-schnell
+    - flux-vae
+    - clip-l
+    - t5xxl-fp8
+  note: Flux schnell đủ bộ. Nặng, chờ lâu hơn.
+
+full:
+  nodes: full
+  models:
+    - sdxl-base
+    - sdxl-vae
+    - upscale-4x-ultrasharp
+  note: Bộ node đầy đủ cho làm việc thật.

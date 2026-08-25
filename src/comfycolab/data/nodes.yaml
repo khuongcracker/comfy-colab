@@ -1,0 +1,50 @@
+# Các bộ custom node cho ComfyUI.
+#
+# Cách dùng:
+#   - Mỗi bộ là một khoá cấp cao nhất.
+#   - `extends` để kế thừa bộ khác, khỏi chép lại danh sách.
+#   - Mỗi node viết gọn bằng URL, hoặc viết đủ để chỉnh chi tiết:
+#       - repo: https://github.com/...
+#         requirements: false     # bỏ qua pip install -r
+#         ref: v1.2.3             # ghim tag/commit
+#
+# Sửa file này KHÔNG cần sửa code. Thêm node = thêm một dòng.
+
+fast:
+  # Bộ tối thiểu để mở lên dùng được ngay. Mục tiêu ~2-3 phút cài.
+  nodes:
+    - repo: https://github.com/Comfy-Org/ComfyUI-Manager
+      requirements: true
+    - repo: https://github.com/rgthree/rgthree-comfy
+      requirements: false
+    - repo: https://github.com/pythongosssss/ComfyUI-Custom-Scripts
+      requirements: false
+    - repo: https://github.com/chrisgoringe/cg-use-everywhere
+      requirements: false
+
+base:
+  extends: fast
+  nodes:
+    - repo: https://github.com/Fannovel16/comfyui_controlnet_aux
+    - repo: https://github.com/ssitu/ComfyUI_UltimateSDUpscale
+      requirements: false
+    - repo: https://github.com/shiimizu/ComfyUI-TiledDiffusion
+      requirements: false
+    - repo: https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch
+      requirements: false
+    - repo: https://github.com/kijai/ComfyUI-KJNodes
+    - repo: https://github.com/cubiq/ComfyUI_essentials
+
+full:
+  extends: base
+  nodes:
+    - repo: https://github.com/ltdrdata/ComfyUI-Impact-Pack
+    - repo: https://github.com/WASasquatch/was-node-suite-comfyui
+    - repo: https://github.com/cubiq/ComfyUI_IPAdapter_plus
+      requirements: false
+    - repo: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite
+    - repo: https://github.com/1038lab/ComfyUI-RMBG
+
+# Bộ trống — dùng khi chỉ muốn ComfyUI thuần, tự cài node bằng Manager.
+none:
+  nodes: []

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comfy-colab"
+version = "0.1.0"
+description = "Chạy ComfyUI trên Google Colab — notebook mỏng, logic test được"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+comfycolab = ["data/*.yaml"]
+
+[tool.pytest.ini_options]
+# src/ nằm trong testpaths để doctest trong docstring cũng được chạy.
+# runtime.py bị loại vì nó chỉ toàn side effect (mount Drive, clone, chạy server).
+testpaths = ["tests", "src"]
+addopts = "-q --doctest-modules --ignore=src/comfycolab/runtime.py"
+pythonpath = ["src"]
