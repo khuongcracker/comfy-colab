@@ -13,7 +13,7 @@ Chạy ComfyUI trên Google Colab. Notebook mỏng + package Python test đượ
 
 ```bash
 pip install -e ".[dev]"
-pytest                 # 65 test logic, ~0.1s, không cần mạng/GPU/Colab
+pytest                 # 81 test logic, ~5s, không cần GPU/Colab
 pytest -m network      # kiểm URL trong catalog còn sống (~20s)
 pytest -k resolver     # chạy nhóm
 ```
@@ -52,6 +52,16 @@ Drive free chỉ **15 GB**, đĩa tạm Colab khoảng **80 GB**. `Paths.models_
 - Chỉ chạy **Colab**. Có giả định `/content` và Google Drive. Muốn đỡ RunPod/local thì phải bóc giả định đó ra khỏi `Paths` trước.
 - Không vá frontend JS. Bản gốc string-replace vào bundle đã minify để đổi default workflow — bỏ hẳn, quá giòn.
 
+## Tunnel — đã kiểm chứng bằng traffic thật
+
+`CloudflareTunnel` đã chạy end-to-end thật (26/08/2026): server local → cloudflared → Internet → gọi ngược về, HTTP 200 đúng nội dung. Không phải suy đoán.
+
+Hai điều rút ra, đừng làm hỏng:
+- **URL in ra CHƯA dùng được ngay.** Cloudflare cần ~15-30s định tuyến. `wait_for_url()` dò tới khi thông rồi mới set `handle.ready` — đừng bỏ bước này, không thì người dùng bấm sớm, gặp lỗi và tưởng tool hỏng.
+- **`wait_for_url()` trả False KHÔNG có nghĩa tunnel hỏng.** Hay gặp nhất là DNS của mạng đang dùng chưa nhận subdomain mới. Vì vậy nhánh thất bại vẫn phải in link ra, kèm gợi ý đổi DNS — tuyệt đối không in cảnh báo doạ người dùng.
+
 ## Chưa kiểm chứng
 
-Toàn bộ phần side effect (`runtime.py`: mount Drive, clone, cài node, chạy server) **chưa chạy thật trên Colab**. Test hiện tại chỉ phủ phần logic thuần. Lần chạy Colab đầu tiên phải coi là smoke test.
+`runtime.py` (mount Drive, clone ComfyUI, cài node, tải model, chạy server) **chưa chạy thật trên Colab**. Lần chạy Colab đầu tiên vẫn phải coi là smoke test.
+
+Đã xác minh gián tiếp: 7/7 flag dòng lệnh có thật trong `cli_args.py` upstream · 27 thư mục model khớp `folder_paths.py` · 15 repo node + 8 URL model đều sống · tunnel chạy thật end-to-end.

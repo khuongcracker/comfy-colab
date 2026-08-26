@@ -46,6 +46,16 @@ Model nặng (Flux fp8 ~17 GB) không vừa Drive free — chọn `session`. Too
 
 > ⚠️ Thêm model vào `models.yaml` thì **chỉ dùng nguồn không gated**. Repo HuggingFace gated (phải bấm đồng ý license) trả 401 nếu không có token, và người dùng sẽ không hiểu vì sao hỏng. Chạy `pytest -m network` để kiểm.
 
+## Khi link không mở được
+
+Tính năng tạo link đã được **kiểm chứng bằng traffic thật** từ Internet qua Cloudflare về server local (HTTP 200, đúng nội dung). Nếu bấm link mà không vào được:
+
+| Triệu chứng | Nguyên nhân hay gặp | Cách xử |
+|---|---|---|
+| "Không tìm thấy máy chủ" / `DNS_PROBE_FINISHED_NXDOMAIN` | DNS mạng bạn chưa nhận subdomain `trycloudflare` mới tạo. Đã gặp thật: router trả `Non-existent domain` trong khi `1.1.1.1` phân giải bình thường | Đổi DNS máy sang `1.1.1.1` hoặc `8.8.8.8`, hoặc mở bằng 4G để kiểm chứng |
+| Bấm ngay khi link vừa hiện thì lỗi | Cloudflare cần ~15–30s định tuyến | Chờ dòng `✅ Mở ComfyUI tại:` rồi mới bấm — tool tự dò và chỉ báo khi đường đã thông |
+| Link chạy được rồi tự chết | Tunnel `pinggy` bản free giới hạn 60 phút | Dùng `cloudflare` (không giới hạn), hoặc lấy token pinggy |
+
 ## Kiến trúc
 
 ```
@@ -70,7 +80,7 @@ Lý do đằng sau từng quyết định nằm ở [docs/DECISIONS.md](docs/DEC
 ```bash
 pip install -e ".[dev]"
 
-pytest                # 65 test logic, ~0.1s, không cần mạng/GPU/Colab
+pytest                # 81 test logic, ~5s, không cần GPU/Colab (có dựng server localhost)
 pytest -m network     # kiểm URL trong catalog còn sống (~20s)
 ```
 

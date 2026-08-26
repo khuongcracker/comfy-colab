@@ -6,7 +6,7 @@ dùng cái nào. Ở đây chọn đúng một cái.
 
 from __future__ import annotations
 
-from .base import Tunnel, TunnelError, TunnelHandle, wait_for_port
+from .base import Tunnel, TunnelError, TunnelHandle, wait_for_port, wait_for_url
 from .cloudflare import CloudflareTunnel
 from .pinggy import PinggyTunnel
 
@@ -34,4 +34,5 @@ __all__ = [
     "TunnelHandle",
     "build",
     "wait_for_port",
+    "wait_for_url",
 ]

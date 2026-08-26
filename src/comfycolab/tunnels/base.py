@@ -28,6 +28,8 @@ class TunnelHandle:
     name: str
     process: subprocess.Popen[str] | None
     url: str | None = None
+    # url đã có KHÔNG có nghĩa là dùng được ngay — xem wait_for_url().
+    ready: bool = False
 
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
@@ -47,6 +49,37 @@ def wait_for_port(port: int, *, host: str = "127.0.0.1", timeout: float = 600.0)
             if sock.connect_ex((host, port)) == 0:
                 return True
         time.sleep(0.5)
+    return False
+
+
+def wait_for_url(url: str, *, timeout: float = 60.0, interval: float = 3.0) -> bool:
+    """Dò xem URL công khai đã đi được chưa. Best-effort, không bảo đảm.
+
+    Đo được khi test thật: cloudflared in URL ra ngay, nhưng Cloudflare cần
+    thêm ~15-30s mới định tuyến tới nó. Bấm sớm là gặp lỗi rồi tưởng hỏng.
+
+    False KHÔNG có nghĩa là tunnel hỏng. Đã gặp trường hợp DNS của mạng đang
+    dùng chưa phân giải được subdomain trycloudflare mới (router trả
+    "Non-existent domain" trong khi 1.1.1.1 trả bình thường) — lúc đó tunnel
+    vẫn chạy tốt với người dùng ở mạng khác. Vì vậy chỗ gọi phải in link ra
+    dù hàm này trả về gì.
+
+    Bất kỳ phản hồi HTTP nào cũng tính là thông, kể cả 4xx/5xx: lúc đó
+    traffic ĐÃ về tới server local, nó trả gì là việc của ComfyUI.
+    """
+    import urllib.error
+    import urllib.request
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "comfy-colab"})
+            urllib.request.urlopen(req, timeout=10)
+            return True
+        except urllib.error.HTTPError:
+            return True  # có phản hồi = đường đã thông
+        except Exception:
+            time.sleep(interval)
     return False
 
 
@@ -100,7 +133,21 @@ class Tunnel:
                 url = self.extract_url(line)
                 if url and not handle.url:
                     handle.url = url
-                    print(f"\n🔗 Mở ComfyUI tại: {url}\n")
+                    print(f"\n🔗 Link: {url}")
+                    print("   Cloudflare cần ~15-30s để định tuyến, chờ chút...")
+                    if wait_for_url(url):
+                        handle.ready = True
+                        print(f"\n\033[1;32m✅ Mở ComfyUI tại: {url}\033[0m\n")
+                    else:
+                        # Không dám khẳng định là hỏng: hay gặp nhất là DNS của
+                        # mạng đang dùng chưa biết subdomain mới.
+                        print(
+                            f"\n\033[1;32m🔗 Mở ComfyUI tại: {url}\033[0m\n"
+                            "   (chưa tự xác nhận được đường đi — cứ mở thử.\n"
+                            "    Báo 'không tìm thấy máy chủ' thì là DNS mạng của bạn\n"
+                            "    chưa nhận subdomain mới: đổi DNS sang 1.1.1.1 hoặc\n"
+                            "    8.8.8.8, hoặc mở bằng mạng 4G để kiểm chứng.)\n"
+                        )
 
         threading.Thread(target=worker, daemon=True, name=f"tunnel-{self.name}").start()
         return handle
